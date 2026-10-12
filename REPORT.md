@@ -7,15 +7,15 @@
 
 ## Dataset
 
-The data come from the Ergast-based Formula 1 World Championship dataset (Kaggle), a relational set of 14 tables. I used seven: results (base table), races, drivers, constructors, circuits, qualifying, and status. One row represents one driver in one Grand Prix. After restricting to seasons 2014–2024 (hybrid-engine era), the modelling table has 4,626 rows and 13 model features. Post-race tables (lap_times, pit_stops) and post-race standings were excluded to avoid leakage and to respect the repository size limit. The dataset was chosen because the target must be built from several tables and because the temporal structure forces careful split and feature design.
+The data is from the Formula 1 World Championship data set based on Ergast (Kaggle), a relational set of 14 tables. I used seven: results (base table), races, drivers, constructors, circuits, qualifying, status. Each row represents a driver in a single Grand Prix. After limiting to seasons 2014-2024 (hybrid-engine era), the modelling table has 4,626 rows and 13 model features. To avoid leakage and respecting the repository size limit, we excluded post-race tables (lap_times, pit_stops) and post-race standings . The dataset is chosen for two reasons; the target must be built from multiple tables and the time structure calls for careful split and feature design.
 
 ## Business / real-life framing
 
-FantasyGP, a fantasy F1 platform, wants to recommend drivers likely to score points (top-10 finish) in the upcoming race. The model runs after qualifying and before the race, so only the starting grid, qualifying results, and earlier races can be used. This determines three pipeline decisions:
+FantasyGP is a fantasy F1 platform, which will suggest drivers who are most likely to score points (top-10 finish) in the next race. The model runs after qualifying and before the race, so only the starting grid, the qualifying results and previous races can be used. This leads to three pipeline decisions:
 
-Target: scores_points = 1 if points > 0. In 2014–2024, this is identical to finishing in the top ten (zero mismatches), so the target is unambiguous.
-Split: chronological, because a random split would let future races inform predictions about past ones. Train 2014–2019 (2,487 rows, 48.7% positive), validation 2020–2021 (780 rows, 50.0%), test 2022–2024 (1,359 rows, 50.0%).
-Threshold metric: expected misclassification cost. A false positive (recommending a non-scorer) costs 1; a false negative (missing a scorer) costs 2, since the platform’s value lies in finding undervalued drivers. The threshold is chosen on the validation set by minimising this cost, not fixed at 0.5. With calibrated probabilities, the theoretical cut-off is 1/(1+2) ≈ 0.33.
+- scores_points = (points > 0) * 1. This is equivalent to a top ten finish (zero mismatches) for 2014-2024, so the target is clear.
+- Split: chronological, since a random split would allow predictions of past races to be influenced by future races. Train 2014–2019 (2,487 rows, 48.7% positive), validation 2020–2021 (780 rows, 50.0%), test 2022–2024 (1,359 rows, 50.0%).
+- Threshold metric: expected misclassification cost. A false positive (recommending a non-scorer) has a cost of 1, a false negative (missing a scorer) costs 2, because the value of the platform is in finding undervalued drivers. This cost is minimised on the validation set to choose the threshold (which is not fixed at 0.5). With calibrated probabilities, the theoretical cut-off is 1/(1+2) ≈ 0.33.
 
 ## Data preparation & feature engineering
 
